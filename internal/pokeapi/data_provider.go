@@ -2,8 +2,8 @@ package pokeapi
 
 import (
 	"errors"
-	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -15,7 +15,7 @@ func (c *Client) GetDataFromCacheOrInternet(url string, flagDebug bool) ([]byte,
 		return entry, nil
 	} else {
 		if flagDebug {
-			fmt.Printf("Not found. Starting request for %s\n", url)
+			log.Printf("Not found. Starting request for %s\n", url)
 		}
 		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
@@ -45,7 +45,7 @@ func (c *Client) GetDataFromCacheOrInternet(url string, flagDebug bool) ([]byte,
 
 func closing(body io.ReadCloser, flagDebug bool) {
 	if flagDebug {
-		fmt.Println("closing result body")
+		log.Println("closing result body")
 	}
 	body.Close()
 }

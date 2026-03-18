@@ -3,7 +3,10 @@ package main
 import (
 	"time"
 
+	"bootdev/go/pokedexcli/internal"
 	"bootdev/go/pokedexcli/internal/pokeapi"
+
+	"golang.org/x/term"
 )
 
 type config struct {
@@ -12,6 +15,8 @@ type config struct {
 	Previous       string
 	flagDebug      bool
 	caughtPokemons map[string]pokeapi.Pokemon
+	oldState       *term.State
+	printer        internal.Printer
 }
 
 func main() {
@@ -23,7 +28,8 @@ func main() {
 		Previous:       "",
 		flagDebug:      flagDebug,
 		caughtPokemons: make(map[string]pokeapi.Pokemon),
+		printer:        nil,
 	}
 
-	startRepl(currentConfig)
+	startRepl(&currentConfig)
 }

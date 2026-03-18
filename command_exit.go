@@ -1,12 +1,14 @@
 package main
 
 import (
-	"fmt"
 	"os"
+
+	"golang.org/x/term"
 )
 
 func commandExit(c *config, param string) error {
-	fmt.Printf("Closing the Pokedex... Goodbye!\n")
+	c.printer.Printf("Closing the Pokedex... Goodbye!\n")
+	term.Restore(int(os.Stdin.Fd()), c.oldState)
 	os.Exit(0)
 	return nil
 }

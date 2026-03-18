@@ -1,16 +1,16 @@
 package main
 
 import (
-	"fmt"
 	"maps"
 	"slices"
 )
 
 func commandHelp(c *config, param string) error {
-	fmt.Printf("Welcome to the Pokedex!\nUsage:\n\n")
+	c.printer.Printf("Usage:\n\n")
 	for _, key := range slices.Sorted(maps.Keys(registry)) {
 		command := registry[key]
-		fmt.Printf("%s: %s\n", command.name, command.description)
+		c.printer.Printf("%s: %s\n", command.name, command.description)
 	}
+	c.printer.Printf("\nThe previous commands can be repeated by using the up arrow.\n")
 	return nil
 }

@@ -1,16 +1,12 @@
 package main
 
-import (
-	"fmt"
-)
-
 func commandMap(c *config, param string) error {
 	if c.Next == "" {
-		fmt.Println("you're on the last page")
+		c.printer.Println("you're on the last page")
 		return nil
 	}
 
-	locAreas, err := c.pokeapiClient.PrintLocationAreas(c.Next, c.flagDebug)
+	locAreas, err := c.pokeapiClient.PrintLocationAreas(c.Next, c.flagDebug, c.printer)
 	if err != nil {
 		return err
 	}
@@ -22,11 +18,11 @@ func commandMap(c *config, param string) error {
 
 func commandMapb(c *config, param string) error {
 	if c.Previous == "" {
-		fmt.Println("you're on the first page")
+		c.printer.Println("you're on the first page")
 		return nil
 	}
 
-	locAreas, err := c.pokeapiClient.PrintLocationAreas(c.Previous, c.flagDebug)
+	locAreas, err := c.pokeapiClient.PrintLocationAreas(c.Previous, c.flagDebug, c.printer)
 	if err != nil {
 		return err
 	}

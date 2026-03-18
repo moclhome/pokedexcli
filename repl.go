@@ -1,10 +1,12 @@
 package main
 
 import (
-	"bufio"
+	"bootdev/go/pokedexcli/internal"
 	"fmt"
 	"os"
 	"strings"
+
+	"golang.org/x/term"
 )
 
 type cliCommand struct {
@@ -15,7 +17,14 @@ type cliCommand struct {
 
 var registry map[string]cliCommand
 
-func startRepl(currentConfig config) {
+// Usage:
+/*
+terminal := term.NewTerminal(os.Stdin, "> ")
+wrapper := &TerminalWrapper{Terminal: terminal}
+wrapper.Printf("Value: %d, Name: %s\n", value, name)
+*/
+
+func startRepl(currentConfig *config) {
 	registry = map[string]cliCommand{
 		"exit": {
 			name:        "exit",
@@ -59,28 +68,58 @@ func startRepl(currentConfig config) {
 		},
 	}
 
-	scanner := bufio.NewScanner(os.Stdin)
+	fmt.Println("Welcome to the Pokedex!\nTo display a list of available commands, use \"help\".")
+
+	// Create a terminal using standard input/output
+	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
+	currentConfig.oldState = oldState
+	if err != nil {
+		currentConfig.printer.Printf("Error putting the terminal to raw mode: %v\n", err)
+		return
+	}
+	defer term.Restore(int(os.Stdin.Fd()), oldState)
+
+	terminal := term.NewTerminal(os.Stdin, "Pokedex >")
+	wrapper := internal.TerminalWrapper{T: terminal}
+	currentConfig.printer = wrapper
+
+	// Read lines interactively
 	for {
-		fmt.Print("Pokedex >")
-		scanner.Scan()
-		input := scanner.Text()
-		if err := scanner.Err(); err != nil {
-			fmt.Printf("Invalid input: %s", err)
+		line, err := terminal.ReadLine()
+		if err != nil {
+			currentConfig.printer.Printf("Invalid input: %s", err)
+			break
 		}
-		cleanedInput := CleanInput(input)
+		// Process line
+
+		/*scanner := bufio.NewScanner(os.Stdin)
+		for {
+			fmt.Print("Pokedex >")
+			scanner.Scan()
+			input := scanner.Text()
+			if err := scanner.Err(); err != nil {
+				fmt.Printf("Invalid input: %s", err)
+			}*/
+		cleanedInput := CleanInput(line)
 
 		theCommand := cleanedInput[0]
 		var firstParam string
 		if len(cleanedInput) > 1 {
 			firstParam = cleanedInput[1]
 		}
+		if theCommand == "test" {
+			for i := 0; i < 5; i++ {
+				currentConfig.printer.Printf("test %d Printf\n", i)
+			}
+		}
+
 		commandStruct, ok := registry[theCommand]
 		if !ok {
-			fmt.Printf("Unknown command\n")
+			currentConfig.printer.Println("Unknown command\n")
 		} else {
-			err := commandStruct.callback(&currentConfig, firstParam)
+			err := commandStruct.callback(currentConfig, firstParam)
 			if err != nil {
-				fmt.Println("Error: ", err)
+				currentConfig.printer.Printf("Error: %v", err)
 			}
 		}
 	}

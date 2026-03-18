@@ -1,10 +1,9 @@
 package pokeapi
 
 import (
+	"bootdev/go/pokedexcli/internal"
 	"net/http"
 	"time"
-
-	"bootdev/go/pokedexcli/internal"
 )
 
 // Client -

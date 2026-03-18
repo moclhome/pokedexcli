@@ -1,11 +1,11 @@
 package pokeapi
 
 import (
+	"bootdev/go/pokedexcli/internal"
 	"encoding/json"
-	"fmt"
 )
 
-func (c *Client) PrintPokemonEncounters(areaName string, flagDebug bool) error {
+func (c *Client) PrintPokemonEncounters(areaName string, flagDebug bool, p internal.Printer) error {
 	url := baseURL + "/location-area/" + areaName + "/"
 
 	data, err := c.GetDataFromCacheOrInternet(url, flagDebug)
@@ -13,7 +13,7 @@ func (c *Client) PrintPokemonEncounters(areaName string, flagDebug bool) error {
 		return err
 	}
 
-	fmt.Println("Pokemon found:")
+	p.Println("Pokemon found:")
 
 	var certainArea areaWithEncounter
 	if err = json.Unmarshal(data, &certainArea); err != nil {
@@ -21,7 +21,7 @@ func (c *Client) PrintPokemonEncounters(areaName string, flagDebug bool) error {
 	}
 
 	for _, encounter := range certainArea.PokemonEncounters {
-		fmt.Printf(" - %s\n", encounter.Pokemon.Name)
+		p.Printf(" - %s\n", encounter.Pokemon.Name)
 	}
 	return nil
 }

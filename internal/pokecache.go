@@ -1,7 +1,7 @@
 package internal
 
 import (
-	"fmt"
+	"log"
 	"sync"
 	"time"
 )
@@ -11,6 +11,10 @@ type Cache struct {
 	m         *sync.Mutex
 	interval  time.Duration
 	flagDebug bool
+
+	/*LogAdding   func()
+	LogGetting  func(cacheLength int, found bool)
+	LogDeleting func(key string)*/
 }
 
 type cacheEntry struct {
@@ -32,26 +36,26 @@ func NewCache(interval time.Duration, flagDebug bool) Cache {
 }
 
 func (ca *Cache) Add(key string, val []byte) {
-	if ca.flagDebug {
-		fmt.Println("Add to cache")
-	}
 	locking(ca, "Add")
 	defer unlocking(ca, "Add")
 	ca.cacheMap[key] = cacheEntry{
 		createdAt: time.Now(),
 		val:       val,
 	}
+	if ca.flagDebug {
+		log.Println("Add to cache")
+	}
 }
 
 func (ca *Cache) Get(key string) ([]byte, bool) {
-	if ca.flagDebug {
-		fmt.Printf("There are %d entries in the cache\n", len(ca.cacheMap))
-	}
 	locking(ca, "Get")
 	defer unlocking(ca, "Get")
 	entry, found := ca.cacheMap[key]
-	if found && ca.flagDebug {
-		fmt.Println("Found in cache")
+	if ca.flagDebug {
+		log.Printf("There are %d entries in the cache\n", len(ca.cacheMap))
+		if found {
+			log.Println("Found in cache")
+		}
 	}
 	return entry.val, found
 }
@@ -69,10 +73,10 @@ func (ca *Cache) reap(interval time.Duration) {
 	for key, value := range ca.cacheMap {
 		age := time.Since(value.createdAt)
 		if age > interval {
-			if ca.flagDebug {
-				fmt.Printf("deleting entry %s\n", key)
-			}
 			delete(ca.cacheMap, key)
+			if ca.flagDebug {
+				log.Printf("Deleting %s from cache", key)
+			}
 		}
 	}
 }
@@ -80,12 +84,12 @@ func (ca *Cache) reap(interval time.Duration) {
 func locking(ca *Cache, name string) {
 	ca.m.Lock()
 	if ca.flagDebug {
-		fmt.Printf("%s locked...\n", name)
+		log.Printf("%s locked...\n", name)
 	}
 }
 func unlocking(ca *Cache, name string) {
 	ca.m.Unlock()
 	if ca.flagDebug {
-		fmt.Printf("%s ...unlocked!\n", name)
+		log.Printf("%s ...unlocked!\n", name)
 	}
 }
