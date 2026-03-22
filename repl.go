@@ -13,16 +13,10 @@ type cliCommand struct {
 	name        string
 	description string
 	callback    func(*config, string) error
+	paramType   string
 }
 
 var registry map[string]cliCommand
-
-// Usage:
-/*
-terminal := term.NewTerminal(os.Stdin, "> ")
-wrapper := &TerminalWrapper{Terminal: terminal}
-wrapper.Printf("Value: %d, Name: %s\n", value, name)
-*/
 
 func startRepl(currentConfig *config) {
 	registry = map[string]cliCommand{
@@ -30,36 +24,43 @@ func startRepl(currentConfig *config) {
 			name:        "exit",
 			description: "Exit the Pokedex",
 			callback:    commandExit,
+			paramType:   "",
 		},
 		"help": {
 			name:        "help",
 			description: "List all existing commands",
 			callback:    commandHelp,
+			paramType:   "",
 		},
 		"map": {
 			name:        "map",
 			description: "List the next 20 location areas",
 			callback:    commandMap,
+			paramType:   "",
 		},
 		"mapb": {
 			name:        "mapb",
 			description: "List the previous 20 location areas",
 			callback:    commandMapb,
+			paramType:   "",
 		},
 		"explore": {
 			name:        "explore <area>",
 			description: "List the Pokémon located in an area",
 			callback:    commandExplore,
+			paramType:   "area",
 		},
 		"catch": {
 			name:        "catch <pokemon>",
 			description: "Try to catch a Pokémon",
 			callback:    commandCatch,
+			paramType:   "pokemon",
 		},
 		"inspect": {
 			name:        "inspect <pokemon>",
 			description: "Inspect a Pokémon that you have caught before",
 			callback:    commandInspect,
+			paramType:   "pokemon",
 		},
 		"pokedex": {
 			name:        "pokedex",
@@ -77,11 +78,26 @@ func startRepl(currentConfig *config) {
 		currentConfig.printer.Printf("Error putting the terminal to raw mode: %v\n", err)
 		return
 	}
-	defer term.Restore(int(os.Stdin.Fd()), oldState)
+
+	defer func() {
+		term.Restore(int(os.Stdin.Fd()), oldState)
+		currentConfig.printer.Println("defer in startRepl - restored old status")
+		if err := recover(); err != nil {
+			currentConfig.printer.Printf("Fatal Error '%v'! But recovered.", err)
+		}
+	}()
 
 	terminal := term.NewTerminal(os.Stdin, "Pokedex >")
+
 	wrapper := internal.TerminalWrapper{T: terminal}
 	currentConfig.printer = wrapper
+
+	CurrentCompletionData = make(map[string][]string)
+	terminal.AutoCompleteCallback = ContextAutocompletion
+	// fill in commands for autocompletion
+	for cmd := range registry {
+		CurrentCompletionData["command"] = append(CurrentCompletionData["command"], cmd)
+	}
 
 	// Read lines interactively
 	for {
@@ -90,16 +106,7 @@ func startRepl(currentConfig *config) {
 			currentConfig.printer.Printf("Invalid input: %s", err)
 			break
 		}
-		// Process line
 
-		/*scanner := bufio.NewScanner(os.Stdin)
-		for {
-			fmt.Print("Pokedex >")
-			scanner.Scan()
-			input := scanner.Text()
-			if err := scanner.Err(); err != nil {
-				fmt.Printf("Invalid input: %s", err)
-			}*/
 		cleanedInput := CleanInput(line)
 
 		theCommand := cleanedInput[0]

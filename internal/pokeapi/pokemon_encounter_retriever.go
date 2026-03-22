@@ -5,23 +5,20 @@ import (
 	"encoding/json"
 )
 
-func (c *Client) PrintPokemonEncounters(areaName string, flagDebug bool, p internal.Printer) error {
+func (c *Client) GetPokemonEncounter(areaName string, flagDebug bool, p internal.Printer) (areaWithEncounter, error) {
 	url := baseURL + "/location-area/" + areaName + "/"
 
 	data, err := c.GetDataFromCacheOrInternet(url, flagDebug)
 	if err != nil {
-		return err
+		return areaWithEncounter{}, err
 	}
 
 	p.Println("Pokemon found:")
 
 	var certainArea areaWithEncounter
 	if err = json.Unmarshal(data, &certainArea); err != nil {
-		return err
+		return areaWithEncounter{}, err
 	}
 
-	for _, encounter := range certainArea.PokemonEncounters {
-		p.Printf(" - %s\n", encounter.Pokemon.Name)
-	}
-	return nil
+	return certainArea, nil
 }

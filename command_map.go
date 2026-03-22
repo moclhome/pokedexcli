@@ -13,6 +13,10 @@ func commandMap(c *config, param string) error {
 
 	c.Next = locAreas.Next
 	c.Previous = locAreas.Previous
+	// save areas for autocompletion
+	for _, area := range locAreas.Results {
+		CurrentCompletionData["area"] = append(CurrentCompletionData["area"], area.Name)
+	}
 	return nil
 }
 
@@ -29,5 +33,9 @@ func commandMapb(c *config, param string) error {
 
 	c.Next = locAreas.Next
 	c.Previous = locAreas.Previous
+	// save areas for autocompletion
+	for _, area := range locAreas.Results {
+		CurrentCompletionData["area"] = append(CurrentCompletionData["area"], area.Name)
+	}
 	return nil
 }

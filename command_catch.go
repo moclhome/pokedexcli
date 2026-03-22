@@ -25,6 +25,8 @@ func commandCatch(c *config, param string) error {
 		c.printer.Printf("You caught %s!\n", param)
 		c.caughtPokemons[param] = thePokemon
 		c.printer.Printf("There are now %d Pokémon in your Pokedex.\n", len(c.caughtPokemons))
+		// save caught pokemon for autocompletion
+		CurrentCompletionData["pokemon"] = append(CurrentCompletionData["pokemon"], param)
 	} else {
 		c.printer.Printf("%s escaped.\n", param)
 	}

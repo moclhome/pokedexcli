@@ -32,4 +32,5 @@ func main() {
 	}
 
 	startRepl(&currentConfig)
+	commandExit(&currentConfig, "")
 }
