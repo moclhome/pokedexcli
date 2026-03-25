@@ -1,18 +1,18 @@
 package pokeapi
 
 import (
-	"bootdev/go/pokedexcli/internal"
 	"encoding/json"
+	"log"
 )
 
-func (c *Client) PrintLocationAreas(url string, flagDebug bool, p internal.Printer) (locationArea, error) {
+func (c *Client) GetLocationAreas(url string, flagDebug bool) (locationArea, error) {
 	firstUrl := baseURL + "/location-area"
 	if url == "" || url == "start" { // "" should not happen, but to be on the save side
 		url = firstUrl
 	}
 
 	if flagDebug {
-		p.Printf("Provide locations for url %s\n", url)
+		log.Printf("Provide locations for url %s\n", url)
 	}
 	data, err := c.GetDataFromCacheOrInternet(url, flagDebug)
 	if err != nil {
@@ -24,8 +24,5 @@ func (c *Client) PrintLocationAreas(url string, flagDebug bool, p internal.Print
 		return locationArea{}, err
 	}
 
-	for _, locationArea := range locAreas.Results {
-		p.Printf("%s\n", locationArea.Name)
-	}
 	return locAreas, nil
 }

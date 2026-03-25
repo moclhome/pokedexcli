@@ -1,19 +1,23 @@
 package main
 
-import "strings"
+import (
+	"bootdev/go/pokedexcli/internal"
+	"strings"
+)
 
-func commandExplore(c *config, param string) error {
-	c.printer.Printf("Exploring %s ...\n", param)
-	theAreaWithEncounter, err := c.pokeapiClient.GetPokemonEncounter(param, c.flagDebug, c.printer)
+func commandExplore(c *internal.Config, param string) error {
+	c.Printer.Printf("Exploring %s ...\n", param)
+	theAreaWithEncounter, err := c.PokeapiClient.GetPokemonEncounter(param, c.FlagDebug)
 	if err != nil {
 		if strings.Contains(err.Error(), "404") {
-			c.printer.Printf("There is no area named %s.\n", param)
+			c.Printer.Printf("There is no area named %s.\n", param)
 			return nil
 		}
 		return err
 	}
+	c.Printer.Println("Pokemon found:")
 	for _, encounter := range theAreaWithEncounter.PokemonEncounters {
-		c.printer.Printf(" - %s\n", encounter.Pokemon.Name)
+		c.Printer.Printf(" - %s\n", encounter.Pokemon.Name)
 		// save pokemon encounters for autocompletion
 		CurrentCompletionData["pokemon"] = append(CurrentCompletionData["pokemon"], encounter.Pokemon.Name)
 	}

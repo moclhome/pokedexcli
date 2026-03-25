@@ -12,13 +12,13 @@ import (
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(*config, string) error
+	callback    func(*internal.Config, string) error
 	paramType   string
 }
 
 var registry map[string]cliCommand
 
-func startRepl(currentConfig *config) {
+func startRepl(currentConfig *internal.Config) {
 	registry = map[string]cliCommand{
 		"exit": {
 			name:        "exit",
@@ -28,82 +28,98 @@ func startRepl(currentConfig *config) {
 		},
 		"help": {
 			name:        "help",
-			description: "List all existing commands",
+			description: "List all existing commands.",
 			callback:    commandHelp,
 			paramType:   "",
 		},
 		"map": {
 			name:        "map",
-			description: "List the next 20 location areas",
+			description: "List the next 20 location areas.",
 			callback:    commandMap,
 			paramType:   "",
 		},
 		"mapb": {
 			name:        "mapb",
-			description: "List the previous 20 location areas",
+			description: "List the previous 20 location areas.",
 			callback:    commandMapb,
 			paramType:   "",
 		},
 		"explore": {
 			name:        "explore <area>",
-			description: "List the Pokémon located in an area",
+			description: "List the Pokémon located in an area.",
 			callback:    commandExplore,
 			paramType:   "area",
 		},
 		"catch": {
 			name:        "catch <pokemon>",
-			description: "Try to catch a Pokémon",
+			description: "Try to catch a Pokémon.",
 			callback:    commandCatch,
 			paramType:   "pokemon",
 		},
 		"inspect": {
 			name:        "inspect <pokemon>",
-			description: "Inspect a Pokémon that you have caught before",
+			description: "Inspect a Pokémon that you have caught before.",
 			callback:    commandInspect,
 			paramType:   "pokemon",
 		},
 		"pokedex": {
 			name:        "pokedex",
-			description: "List all the Pokémon that are in your Pokedex",
+			description: "List all the Pokémon that are in your Pokedex.",
 			callback:    commandPokedex,
 		},
 	}
 
-	fmt.Println("Welcome to the Pokedex!\nTo display a list of available commands, use \"help\".")
-
 	// Create a terminal using standard input/output
-	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
-	currentConfig.oldState = oldState
+	terminal, err := createTerminal(currentConfig)
 	if err != nil {
-		currentConfig.printer.Printf("Error putting the terminal to raw mode: %v\n", err)
-		return
+		currentConfig.Printer.Printf("%v", err)
 	}
 
-	defer func() {
-		term.Restore(int(os.Stdin.Fd()), oldState)
-		currentConfig.printer.Println("defer in startRepl - restored old status")
-		if err := recover(); err != nil {
-			currentConfig.printer.Printf("Fatal Error '%v'! But recovered.", err)
-		}
-	}()
-
-	terminal := term.NewTerminal(os.Stdin, "Pokedex >")
-
-	wrapper := internal.TerminalWrapper{T: terminal}
-	currentConfig.printer = wrapper
-
+	// Configure autocompletion
 	CurrentCompletionData = make(map[string][]string)
 	terminal.AutoCompleteCallback = ContextAutocompletion
-	// fill in commands for autocompletion
 	for cmd := range registry {
 		CurrentCompletionData["command"] = append(CurrentCompletionData["command"], cmd)
 	}
 
+	// Get user name for storing user dependent pokedex in a file
+	user, err := terminal.ReadLine()
+	if err != nil {
+		currentConfig.Printer.Printf("Invalid input: %s", err)
+		commandExit(currentConfig, "")
+	}
+
+	found, err := internal.FetchUserDataFromFile(currentConfig, user)
+	if err != nil {
+		currentConfig.Printer.Printf("Error fetching user data: %v", err)
+	}
+
+	defer func() {
+		term.Restore(int(os.Stdin.Fd()), currentConfig.OldState)
+		currentConfig.Printer.Println("defer in startRepl - restored old status")
+		if err := recover(); err != nil {
+			currentConfig.Printer.Printf("Fatal Error '%v'! But recovered.", err)
+		}
+		currentConfig.File.Close()
+	}()
+
+	back := ""
+	if found {
+		back = "back "
+	}
+
+	currentConfig.User = user
+	currentConfig.Printer.Printf("Welcome %sto the Pokedex, %s!\nTo display a list of available commands, use \"help\".\n", back, user)
+	if found {
+		currentConfig.Printer.Printf("You already have %d Pokémon in your Pokedex.\n", len(currentConfig.CaughtPokemons))
+	}
+
+	terminal.SetPrompt("Pokedex >")
 	// Read lines interactively
 	for {
 		line, err := terminal.ReadLine()
 		if err != nil {
-			currentConfig.printer.Printf("Invalid input: %s", err)
+			currentConfig.Printer.Printf("Invalid input: %s", err)
 			break
 		}
 
@@ -114,22 +130,30 @@ func startRepl(currentConfig *config) {
 		if len(cleanedInput) > 1 {
 			firstParam = cleanedInput[1]
 		}
-		if theCommand == "test" {
-			for i := 0; i < 5; i++ {
-				currentConfig.printer.Printf("test %d Printf\n", i)
-			}
-		}
 
 		commandStruct, ok := registry[theCommand]
 		if !ok {
-			currentConfig.printer.Println("Unknown command\n")
+			currentConfig.Printer.Println("Unknown command\n")
 		} else {
 			err := commandStruct.callback(currentConfig, firstParam)
 			if err != nil {
-				currentConfig.printer.Printf("Error: %v", err)
+				currentConfig.Printer.Printf("Error: %v", err)
 			}
 		}
 	}
+}
+
+func createTerminal(c *internal.Config) (*term.Terminal, error) {
+	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
+	c.OldState = oldState
+	if err != nil {
+		return nil, fmt.Errorf("Error putting the terminal to raw mode: %v\n", err)
+	}
+	terminal := term.NewTerminal(os.Stdin, "Please type your user name:")
+
+	wrapper := internal.TerminalWrapper{T: terminal}
+	c.Printer = wrapper
+	return terminal, nil
 }
 
 /**

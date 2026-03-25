@@ -1,7 +1,7 @@
 package pokeapi
 
 import (
-	"bootdev/go/pokedexcli/internal"
+	"bootdev/go/pokedexcli/internal/pokecach"
 	"net/http"
 	"time"
 )
@@ -9,12 +9,12 @@ import (
 // Client -
 type Client struct {
 	httpClient http.Client
-	cache      internal.Cache
+	cache      pokecach.Cache
 }
 
 // NewClient -
 func NewClient(timeout time.Duration, flagDebug bool) Client {
-	cache := internal.NewCache(10*time.Second, flagDebug)
+	cache := pokecach.NewCache(10*time.Second, flagDebug)
 	return Client{
 		httpClient: http.Client{
 			Timeout: timeout,
