@@ -17,5 +17,4 @@ type Config struct {
 	Printer        Printer
 	User           string
 	File           *os.File
-	UserData       pokeapi.UserData
 }

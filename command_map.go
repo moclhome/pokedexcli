@@ -18,7 +18,7 @@ func commandMap(c *internal.Config, param string) error {
 	for _, area := range locAreas.Results {
 		c.Printer.Printf("%s\n", area.Name)
 		// save area for autocompletion
-		CurrentCompletionData["area"] = append(CurrentCompletionData["area"], area.Name)
+		internal.CurrentCompletionData["area"] = append(internal.CurrentCompletionData["area"], area.Name)
 	}
 	return nil
 }
@@ -39,7 +39,7 @@ func commandMapb(c *internal.Config, param string) error {
 	for _, area := range locAreas.Results {
 		c.Printer.Printf("%s\n", area.Name)
 		// save area for autocompletion
-		CurrentCompletionData["area"] = append(CurrentCompletionData["area"], area.Name)
+		internal.CurrentCompletionData["area"] = append(internal.CurrentCompletionData["area"], area.Name)
 	}
 	return nil
 }

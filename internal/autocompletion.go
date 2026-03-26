@@ -1,4 +1,4 @@
-package main
+package internal
 
 import (
 	"strings"
@@ -36,7 +36,7 @@ func ContextAutocompletion(line string, pos int, key rune) (newLine string, newP
 			if pos <= utf8.RuneCountInString(lineArray[0])+utf8.RuneCountInString(lineArray[1])+1 {
 				//log.Printf("second: %s\n", lineArray[1])
 				// cursor in second word => param; type depending on command
-				commonPrefix, fits = searchForCompletion(lineArray[1], registry[lineArray[0]].paramType)
+				commonPrefix, fits = searchForCompletion(lineArray[1], Registry[lineArray[0]].ParamType)
 				//log.Println("common: ", commonPrefix)
 				newLine = strings.Join([]string{lineArray[0], commonPrefix}, " ")
 			}

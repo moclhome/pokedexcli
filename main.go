@@ -16,11 +16,8 @@ func main() {
 		FlagDebug:      flagDebug,
 		CaughtPokemons: make(map[string]pokeapi.Pokemon),
 		Printer:        nil,
-		UserData:       pokeapi.UserData{},
 	}
 
 	startRepl(&currentConfig)
 	commandExit(&currentConfig, "")
-
-	//testFileHandling()
 }

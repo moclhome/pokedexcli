@@ -1,29 +1,25 @@
-package main
+package internal
 
 import "testing"
 
 func TestCleanInput(t *testing.T) {
 	cases := map[string]struct {
-		input	 string
+		input    string
 		expected []string
 	}{
-		"leadingTrailingSpaces":
-		{
+		"leadingTrailingSpaces": {
 			input:    " hello world ",
 			expected: []string{"hello", "world"},
 		},
-		"simple":
-		{
+		"simple": {
 			input:    "My name is Lucy",
 			expected: []string{"my", "name", "is", "lucy"},
 		},
-		"onlyOne":
-		{
+		"onlyOne": {
 			input:    "OneWord",
 			expected: []string{"oneword"},
 		},
-		"empty":
-		{
+		"empty": {
 			input:    "",
 			expected: []string{""},
 		},

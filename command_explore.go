@@ -19,7 +19,7 @@ func commandExplore(c *internal.Config, param string) error {
 	for _, encounter := range theAreaWithEncounter.PokemonEncounters {
 		c.Printer.Printf(" - %s\n", encounter.Pokemon.Name)
 		// save pokemon encounters for autocompletion
-		CurrentCompletionData["pokemon"] = append(CurrentCompletionData["pokemon"], encounter.Pokemon.Name)
+		internal.CurrentCompletionData["pokemon"] = append(internal.CurrentCompletionData["pokemon"], encounter.Pokemon.Name)
 	}
 	return nil
 }

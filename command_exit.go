@@ -12,17 +12,16 @@ import (
 
 func commandExit(c *internal.Config, param string) error {
 	c.Printer.Printf("Closing the Pokedex... Goodbye!\n")
-	var jsonData pokeapi.UserData
-	jsonData.Username = c.User
+	var jsonData []pokeapi.Pokemon
 	for _, nextPokemon := range c.CaughtPokemons {
-		jsonData.Pokedex = append(jsonData.Pokedex, nextPokemon)
+		jsonData = append(jsonData, nextPokemon)
 	}
 	data, err := json.Marshal(jsonData)
 	if err != nil {
 		log.Fatal("Error during Marshal: ", err)
 	}
 
-	internal.WriteUserDataToFile(data)
+	internal.WriteUserDataToFile(data, c.User)
 
 	term.Restore(int(os.Stdin.Fd()), c.OldState)
 	os.Exit(0)

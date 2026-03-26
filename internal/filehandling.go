@@ -9,12 +9,13 @@ import (
 )
 
 const (
-	userDataFileName string = "userdata.txt"
+	fileNameStart string = "userdata_"
+	fileNameEnd   string = ".txt"
 )
 
 var printer Printer
 
-func getFileForReading(filename string) (*os.File, error) {
+/*func getFileForReading(filename string) (*os.File, error) {
 	var f *os.File
 	var err error
 	if _, err = os.Stat(filename); errors.Is(err, os.ErrNotExist) {
@@ -28,20 +29,19 @@ func getFileForReading(filename string) (*os.File, error) {
 		return nil, fmt.Errorf("Error while reading file: '%v\n", err)
 	}
 	return f, nil
-}
+}*/
 
 func FetchUserDataFromFile(c *Config, user string) (bool, error) {
 	printer = c.Printer
 	var f *os.File
 	var savedData []byte
 	var found bool
+	filename := fileNameStart + user + fileNameEnd
 
-	if _, err := os.Stat(userDataFileName); errors.Is(err, os.ErrNotExist) {
-		c.Printer.Println("no file yet")
-		f, err = os.Create(userDataFileName)
+	if _, err := os.Stat(filename); errors.Is(err, os.ErrNotExist) {
+		f, err = os.Create(filename)
 	} else {
-		c.Printer.Println("File found!")
-		savedData, err = os.ReadFile(userDataFileName)
+		savedData, err = os.ReadFile(filename)
 		if err != nil {
 			return false, fmt.Errorf("Error while reading file: '%v\n", err)
 		}
@@ -60,7 +60,7 @@ func FetchUserDataFromFile(c *Config, user string) (bool, error) {
 	c.File = f // TODO don't safe, fetch two times
 
 	if len(savedData) > 0 {
-		if err := fillDataIntoStructure(user, savedData, c.CaughtPokemons, c); err != nil {
+		if err := fillDataIntoStructure(savedData, c.CaughtPokemons); err != nil {
 			return false, err
 		}
 		found = (len(c.CaughtPokemons) > 0)
@@ -70,28 +70,21 @@ func FetchUserDataFromFile(c *Config, user string) (bool, error) {
 	return found, nil
 }
 
-func fillDataIntoStructure(user string, dataToStore []byte, pokeMap map[string]pokeapi.Pokemon, c *Config) error {
-	var readUserData []pokeapi.UserData
+func fillDataIntoStructure(dataToStore []byte, pokeMap map[string]pokeapi.Pokemon) error {
+	var readUserData []pokeapi.Pokemon
 	if err := json.Unmarshal(dataToStore, &readUserData); err != nil {
 		return fmt.Errorf("Error while unmarshaling user data: '%v\n", err)
 	}
-	//c.Printer.Printf("readData: %v\n", readUserData)
-	for _, userData := range readUserData {
-		printer.Printf("user of data: %s\n", userData.Username)
-		if userData.Username == user {
-			c.UserData = userData
-			printer.Printf("Data for user %s found!\n", user)
-			for _, pokemon := range userData.Pokedex {
-				printer.Printf("read in: %s\n", pokemon.Name)
-				pokeMap[pokemon.Name] = pokemon
-			}
-		}
+	for _, pokemon := range readUserData {
+		pokeMap[pokemon.Name] = pokemon
+		CurrentCompletionData["pokemon"] = append(CurrentCompletionData["pokemon"], pokemon.Name)
 	}
 	return nil
 }
 
-func WriteUserDataToFile(data []byte) error {
-	err := os.WriteFile(userDataFileName, data, 0644)
+func WriteUserDataToFile(data []byte, user string) error {
+	filename := fileNameStart + user + fileNameEnd
+	err := os.WriteFile(filename, data, 0644)
 	if err != nil {
 		return fmt.Errorf("Error writing to file: %v\n", err)
 	}

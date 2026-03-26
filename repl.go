@@ -4,68 +4,58 @@ import (
 	"bootdev/go/pokedexcli/internal"
 	"fmt"
 	"os"
-	"strings"
 
 	"golang.org/x/term"
 )
 
-type cliCommand struct {
-	name        string
-	description string
-	callback    func(*internal.Config, string) error
-	paramType   string
-}
-
-var registry map[string]cliCommand
-
 func startRepl(currentConfig *internal.Config) {
-	registry = map[string]cliCommand{
+	internal.Registry = map[string]internal.CliCommand{
 		"exit": {
-			name:        "exit",
-			description: "Exit the Pokedex",
-			callback:    commandExit,
-			paramType:   "",
+			Name:        "exit",
+			Description: "Exit the Pokedex",
+			Callback:    commandExit,
+			ParamType:   "",
 		},
 		"help": {
-			name:        "help",
-			description: "List all existing commands.",
-			callback:    commandHelp,
-			paramType:   "",
+			Name:        "help",
+			Description: "List all existing commands.",
+			Callback:    commandHelp,
+			ParamType:   "",
 		},
 		"map": {
-			name:        "map",
-			description: "List the next 20 location areas.",
-			callback:    commandMap,
-			paramType:   "",
+			Name:        "map",
+			Description: "List the next 20 location areas.",
+			Callback:    commandMap,
+			ParamType:   "",
 		},
 		"mapb": {
-			name:        "mapb",
-			description: "List the previous 20 location areas.",
-			callback:    commandMapb,
-			paramType:   "",
+			Name:        "mapb",
+			Description: "List the previous 20 location areas.",
+			Callback:    commandMapb,
+			ParamType:   "",
 		},
 		"explore": {
-			name:        "explore <area>",
-			description: "List the Pokémon located in an area.",
-			callback:    commandExplore,
-			paramType:   "area",
+			Name:        "explore <area>",
+			Description: "List the Pokémon located in an area.",
+			Callback:    commandExplore,
+			ParamType:   "area",
 		},
 		"catch": {
-			name:        "catch <pokemon>",
-			description: "Try to catch a Pokémon.",
-			callback:    commandCatch,
-			paramType:   "pokemon",
+			Name:        "catch <pokemon>",
+			Description: "Try to catch a Pokémon.",
+			Callback:    commandCatch,
+			ParamType:   "pokemon",
 		},
 		"inspect": {
-			name:        "inspect <pokemon>",
-			description: "Inspect a Pokémon that you have caught before.",
-			callback:    commandInspect,
-			paramType:   "pokemon",
+			Name:        "inspect <pokemon>",
+			Description: "Inspect a Pokémon that you have caught before.",
+			Callback:    commandInspect,
+			ParamType:   "pokemon",
 		},
 		"pokedex": {
-			name:        "pokedex",
-			description: "List all the Pokémon that are in your Pokedex.",
-			callback:    commandPokedex,
+			Name:        "pokedex",
+			Description: "List all the Pokémon that are in your Pokedex.",
+			Callback:    commandPokedex,
 		},
 	}
 
@@ -76,10 +66,10 @@ func startRepl(currentConfig *internal.Config) {
 	}
 
 	// Configure autocompletion
-	CurrentCompletionData = make(map[string][]string)
-	terminal.AutoCompleteCallback = ContextAutocompletion
-	for cmd := range registry {
-		CurrentCompletionData["command"] = append(CurrentCompletionData["command"], cmd)
+	internal.CurrentCompletionData = make(map[string][]string)
+	terminal.AutoCompleteCallback = internal.ContextAutocompletion
+	for cmd := range internal.Registry {
+		internal.CurrentCompletionData["command"] = append(internal.CurrentCompletionData["command"], cmd)
 	}
 
 	// Get user name for storing user dependent pokedex in a file
@@ -109,7 +99,7 @@ func startRepl(currentConfig *internal.Config) {
 	}
 
 	currentConfig.User = user
-	currentConfig.Printer.Printf("Welcome %sto the Pokedex, %s!\nTo display a list of available commands, use \"help\".\n", back, user)
+	currentConfig.Printer.Printf("\nWelcome %sto the Pokedex, %s!\nTo display a list of available commands, use \"help\".\n", back, user)
 	if found {
 		currentConfig.Printer.Printf("You already have %d Pokémon in your Pokedex.\n", len(currentConfig.CaughtPokemons))
 	}
@@ -123,7 +113,7 @@ func startRepl(currentConfig *internal.Config) {
 			break
 		}
 
-		cleanedInput := CleanInput(line)
+		cleanedInput := internal.CleanInput(line)
 
 		theCommand := cleanedInput[0]
 		var firstParam string
@@ -131,11 +121,11 @@ func startRepl(currentConfig *internal.Config) {
 			firstParam = cleanedInput[1]
 		}
 
-		commandStruct, ok := registry[theCommand]
+		commandStruct, ok := internal.Registry[theCommand]
 		if !ok {
 			currentConfig.Printer.Println("Unknown command\n")
 		} else {
-			err := commandStruct.callback(currentConfig, firstParam)
+			err := commandStruct.Callback(currentConfig, firstParam)
 			if err != nil {
 				currentConfig.Printer.Printf("Error: %v", err)
 			}
@@ -149,18 +139,9 @@ func createTerminal(c *internal.Config) (*term.Terminal, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Error putting the terminal to raw mode: %v\n", err)
 	}
-	terminal := term.NewTerminal(os.Stdin, "Please type your user name:")
+	terminal := term.NewTerminal(os.Stdin, "Please type your user name (will be part of a filename):")
 
 	wrapper := internal.TerminalWrapper{T: terminal}
 	c.Printer = wrapper
 	return terminal, nil
-}
-
-/**
- *
- */
-func CleanInput(text string) []string {
-	var returnSlice []string
-	returnSlice = strings.Split(strings.ToLower(strings.Trim(text, " ")), " ")
-	return returnSlice
 }
