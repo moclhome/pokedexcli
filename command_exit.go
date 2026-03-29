@@ -11,7 +11,7 @@ import (
 )
 
 func commandExit(c *internal.Config, param string) error {
-	c.Printer.Printf("Closing the Pokedex... Goodbye!\n")
+	c.Printer.Printf("Closing the Pokedex... Goodbye, %s!\n", c.User)
 	var jsonData []pokeapi.Pokemon
 	for _, nextPokemon := range c.CaughtPokemons {
 		jsonData = append(jsonData, nextPokemon)

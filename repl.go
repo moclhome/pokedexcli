@@ -90,7 +90,6 @@ func startRepl(currentConfig *internal.Config) {
 		if err := recover(); err != nil {
 			currentConfig.Printer.Printf("Fatal Error '%v'! But recovered.", err)
 		}
-		currentConfig.File.Close()
 	}()
 
 	back := ""

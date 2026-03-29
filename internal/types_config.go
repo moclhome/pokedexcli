@@ -2,7 +2,6 @@ package internal
 
 import (
 	"bootdev/go/pokedexcli/internal/pokeapi"
-	"os"
 
 	"golang.org/x/term"
 )
@@ -16,5 +15,4 @@ type Config struct {
 	OldState       *term.State
 	Printer        Printer
 	User           string
-	File           *os.File
 }

@@ -22,6 +22,7 @@ func commandInspect(c *internal.Config, param string) error {
 		for i := 0; i < len(pokemon.Abilities); i++ {
 			c.Printer.Printf("  - %s\n", pokemon.Abilities[i].Ability.Name)
 		}
+		c.Printer.Println("Types:")
 		for i := 0; i < len(pokemon.Types); i++ { // why is this not working with range?
 			c.Printer.Printf("  - %s\n", pokemon.Types[i].Type.Name)
 		}
@@ -41,7 +42,6 @@ func commandInspect(c *internal.Config, param string) error {
 		}
 		movesRestString := strings.Join(movesRest, ", ")
 		c.Printer.Println("   " + movesRestString)
-		c.Printer.Println("Types:")
 		/*for _, type := range pokemon.Types { // I get the error "expected 1 expression" TODO
 			fmt.Printf("  - %s\n", type.Type.Name)
 		}*/

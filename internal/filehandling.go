@@ -46,6 +46,9 @@ func FetchUserDataFromFile(c *Config, user string) (bool, error) {
 			return false, fmt.Errorf("Error while reading file: '%v\n", err)
 		}
 	}
+	defer func() {
+		f.Close()
+	}()
 	/*f, err := getFileForReading(userDataFileName)
 	if err != nil {
 		return false, err
@@ -57,7 +60,6 @@ func FetchUserDataFromFile(c *Config, user string) (bool, error) {
 	}()
 	n, err := f.Read(savedData)*/
 	//c.Printer.Printf("Read bytes: %d\n", n)
-	c.File = f // TODO don't safe, fetch two times
 
 	if len(savedData) > 0 {
 		if err := fillDataIntoStructure(savedData, c.CaughtPokemons); err != nil {
